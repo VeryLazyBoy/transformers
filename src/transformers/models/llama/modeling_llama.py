@@ -882,6 +882,8 @@ class LlamaModel(LlamaPreTrainedModel):
             else:
                 padding_mask = None
 
+        attention_mask_ori = attention_mask.unsqueeze(-1)
+
         attention_mask = self._prepare_decoder_attention_mask(
             attention_mask, (batch_size, seq_length), inputs_embeds, past_key_values_length
         )
@@ -930,6 +932,15 @@ class LlamaModel(LlamaPreTrainedModel):
                 )
 
             hidden_states = layer_outputs[0]
+
+            # skip overflows at padded token
+            if hidden_states.dtype == torch.float16:
+                skip_inf_in_padded_tokens = hidden_states.isinf() * (1 - attention_mask_ori).to(torch.bool)
+                if skip_inf_in_padded_tokens.any():
+                    logger.warning("Invalid inf detected at padded token's position; Skipping it...")
+                    hidden_states = hidden_states.masked_fill(
+                        skip_inf_in_pad_tokens, 42
+                    )  # the filled value does not matter
 
             if use_cache:
                 next_decoder_cache += (layer_outputs[2 if output_attentions else 1],)
