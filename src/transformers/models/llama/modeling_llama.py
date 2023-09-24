@@ -935,7 +935,9 @@ class LlamaModel(LlamaPreTrainedModel):
 
             # skip overflows at padded token
             if hidden_states.dtype == torch.float16:
-                skip_inf_in_padded_tokens = hidden_states.isinf() * (1 - attention_mask_ori).to(torch.bool)
+                skip_inf_in_padded_tokens = hidden_states.isinf() * (1 - attention_mask_ori).to(
+                    hidden_states.device, dtype=torch.bool
+                )
                 if skip_inf_in_padded_tokens.any():
                     logger.warning("Invalid inf detected at padded token's position; Skipping it...")
                     hidden_states = hidden_states.masked_fill(
