@@ -941,7 +941,7 @@ class LlamaModel(LlamaPreTrainedModel):
                 if skip_inf_in_padded_tokens.any():
                     logger.warning("Invalid inf detected at padded token's position; Skipping it...")
                     hidden_states = hidden_states.masked_fill(
-                        skip_inf_in_pad_tokens, 42
+                        skip_inf_in_padded_tokens, 42
                     )  # the filled value does not matter
 
             if use_cache:
